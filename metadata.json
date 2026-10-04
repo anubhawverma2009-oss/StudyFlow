@@ -1,0 +1,8 @@
+{
+  "name": "StudyFlow",
+  "description": "An all-in-one study platform featuring an intelligent PDF viewer, AI tutor, and dynamic collaborative notes editor.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
