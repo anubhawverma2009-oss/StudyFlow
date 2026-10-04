@@ -149,10 +149,10 @@ export function saveUserProfile(profile: UserProfile): void {
 
 export interface PanelLayoutConfig {
   pdfWidthPercent: number;
-  chatWidthPercent: number;
+  chatWidthPercent?: number;
   notesWidthPercent: number;
   isPdfCollapsed: boolean;
-  isChatCollapsed: boolean;
+  isChatCollapsed?: boolean;
   isNotesCollapsed: boolean;
 }
 
@@ -182,3 +182,9 @@ export function savePanelLayout(layout: PanelLayoutConfig): void {
     // Ignore
   }
 }
+
+export const getPanelLayoutLocal = loadPanelLayout;
+export const getUserProfileLocal = loadUserProfile;
+export const saveActiveSessionIdLocal = setActiveSessionIdLocal;
+export const savePanelLayoutLocal = savePanelLayout;
+export const saveUserProfileLocal = saveUserProfile;

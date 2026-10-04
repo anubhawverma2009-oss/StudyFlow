@@ -260,14 +260,15 @@ export const ChatPanel: React.FC = () => {
       aria-label="AI Study Tutor"
       className="flex flex-col h-full bg-white border-r border-slate-200 overflow-hidden"
     >
-      <div className="border-b border-slate-200 bg-white px-3.5 py-2.5 shrink-0 space-y-2">
+      {/* Header with Mode Toggle & Clear Action */}
+      <div className="border-b border-slate-200 bg-white px-3.5 py-2.5 shrink-0 space-y-2 select-none">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold text-slate-900">AI Study Assistant</span>
             <span aria-hidden="true" className="text-slate-300">
               ·
             </span>
-            <span className="text-[11px] text-slate-500 font-mono tabular-nums">
+            <span className="text-[11px] text-slate-500 font-mono tabular-nums bg-slate-100 px-1.5 py-0.5 rounded">
               Page {currentPage} Context
             </span>
           </div>
@@ -278,7 +279,7 @@ export const ChatPanel: React.FC = () => {
                 type="button"
                 onClick={clearConversation}
                 title="Clear chat conversation (preserves notes)"
-                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-md transition-colors"
+                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-md transition-colors cursor-pointer"
               >
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
@@ -287,17 +288,18 @@ export const ChatPanel: React.FC = () => {
               type="button"
               onClick={() => updatePanelLayout({ isChatCollapsed: true })}
               title="Collapse AI Tutor Panel"
-              className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-md transition-colors hidden lg:inline-flex"
+              className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-md transition-colors hidden lg:inline-flex cursor-pointer"
             >
               <PanelLeftClose className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
 
+        {/* Mode Toggle: Ask / Explain vs Change Notes */}
         <div
           role="tablist"
           aria-label="AI Assistant Mode"
-          className="grid grid-cols-2 gap-1 p-1 bg-slate-100 rounded-lg border border-slate-200/70"
+          className="grid grid-cols-2 gap-1 p-1 bg-slate-100/80 rounded-lg border border-slate-200/70"
         >
           <button
             type="button"
@@ -306,11 +308,11 @@ export const ChatPanel: React.FC = () => {
             onClick={() => setAiMode('ask')}
             className={`py-1.5 px-2.5 rounded-md text-xs font-medium transition-all flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer ${
               aiMode === 'ask'
-                ? 'bg-white text-blue-700 shadow-xs border border-slate-200/60'
+                ? 'bg-white text-slate-900 shadow-2xs border border-slate-200/60'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            <MessageSquare className="w-3.5 h-3.5 shrink-0" />
+            <MessageSquare className="w-3.5 h-3.5 shrink-0 text-slate-500" />
             <span>Ask / Explain</span>
           </button>
 
@@ -321,7 +323,7 @@ export const ChatPanel: React.FC = () => {
             onClick={() => setAiMode('change_notes')}
             className={`py-1.5 px-2.5 rounded-md text-xs font-medium transition-all flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer ${
               aiMode === 'change_notes'
-                ? 'bg-emerald-700 text-white shadow-xs'
+                ? 'bg-emerald-600 text-white shadow-2xs'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
@@ -330,32 +332,36 @@ export const ChatPanel: React.FC = () => {
           </button>
         </div>
 
-        <div className="text-[11px] text-slate-500 flex items-center justify-between px-0.5">
-          {aiMode === 'ask' ? (
+        {/* Clear Indicator of Active AI Mode (CRITICAL) */}
+        {aiMode === 'change_notes' ? (
+          <div className="text-[11px] px-2.5 py-1.5 bg-emerald-50 border border-emerald-200/80 rounded-lg text-emerald-900 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0 animate-pulse" />
+            <span className="flex-1 leading-tight">
+              <strong>Change Notes Mode:</strong> Prompts will edit your structured notes on the right and record an undoable version.
+            </span>
+          </div>
+        ) : (
+          <div className="text-[11px] px-2 py-1 text-slate-500 flex items-center justify-between">
             <span>
-              Mode A: Explains concepts &amp; answers questions ·{' '}
-              <strong className="font-medium text-slate-700">Never modifies notes</strong>
+              <strong>Ask / Explain:</strong> Conceptual tutor · Never modifies notes
             </span>
-          ) : (
-            <span className="text-emerald-800">
-              Mode B: Surgically updates your Notes Editor ·{' '}
-              <strong className="font-medium">Creates undoable snapshot</strong>
-            </span>
-          )}
-        </div>
+            <span className="text-slate-400 font-mono text-[10px]">Reference only</span>
+          </div>
+        )}
       </div>
 
-      <div className="bg-slate-50 border-b border-slate-200 px-3 py-2 flex items-center gap-1.5 overflow-x-auto shrink-0">
+      {/* Compact Quick Action Chips */}
+      <div className="bg-slate-50/70 border-b border-slate-200 px-3 py-1.5 flex items-center gap-1.5 overflow-x-auto shrink-0 select-none">
         {(
           [
             { id: 'explain', label: 'Explain' },
             { id: 'summarize', label: 'Summarize' },
             { id: 'make_notes', label: 'Make Notes' },
-            { id: 'important_points', label: 'Important Points' },
+            { id: 'important_points', label: 'Key Points' },
             { id: 'exam_questions', label: 'Exam Questions' },
-            { id: 'examples', label: 'Examples' },
+            { id: 'examples', label: 'Worked Example' },
             { id: 'hinglish', label: 'Hinglish' },
-            { id: 'make_simple', label: 'Make Simple' }
+            { id: 'make_simple', label: 'Simplify' }
           ] as { id: QuickActionType; label: string }[]
         ).map((item) => (
           <button
@@ -363,7 +369,7 @@ export const ChatPanel: React.FC = () => {
             type="button"
             disabled={!activeSession || isAiGenerating}
             onClick={() => handleQuickAction(item.id)}
-            className="px-2.5 py-1 bg-white hover:bg-blue-50 text-slate-700 hover:text-blue-700 border border-slate-200 hover:border-blue-300 rounded-md text-[11px] font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer disabled:opacity-40"
+            className="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-700 hover:text-slate-900 border border-slate-200/90 rounded-full text-[11px] font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer disabled:opacity-40 shadow-2xs"
           >
             {item.label}
           </button>
@@ -387,12 +393,12 @@ export const ChatPanel: React.FC = () => {
                 className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}
               >
                 <div className="flex items-center gap-1.5 text-[11px] text-slate-400 mb-1 px-1">
-                  <span className="font-medium text-slate-600">
-                    {isUser ? 'You' : 'ScholarSync Tutor'}
+                  <span className="font-medium text-slate-700">
+                    {isUser ? 'You' : 'StudyFlow AI'}
                   </span>
                   <span aria-hidden="true">·</span>
-                  <span>
-                    {msg.mode === 'change_notes' ? 'Change Notes Mode' : 'Ask / Explain Mode'}
+                  <span className={msg.mode === 'change_notes' ? 'text-emerald-700 font-medium' : ''}>
+                    {msg.mode === 'change_notes' ? 'Notes Revision' : 'Tutor'}
                   </span>
                   {msg.pageContext && (
                     <>
@@ -577,7 +583,7 @@ export const ChatPanel: React.FC = () => {
         onSubmit={handleSend}
         className={`p-3 border-t transition-colors shrink-0 ${
           aiMode === 'change_notes'
-            ? 'bg-emerald-50/40 border-emerald-200'
+            ? 'bg-emerald-50/50 border-emerald-200'
             : 'bg-white border-slate-200'
         }`}
       >
@@ -591,10 +597,14 @@ export const ChatPanel: React.FC = () => {
             disabled={!activeSession}
             placeholder={
               aiMode === 'ask'
-                ? `Ask about Page ${currentPage} (e.g., "Explain this formula", "Explain in Hinglish")...`
-                : `Tell AI how to change your notes (e.g., "Make Definitions shorter", "Add 5-mark answer")...`
+                ? `Ask anything about Page ${currentPage} or concepts in the PDF...`
+                : `Describe changes to your notes (e.g. "Add exam questions", "Simplify overview")...`
             }
-            className="flex-1 resize-none rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none disabled:opacity-50"
+            className={`flex-1 resize-none rounded-lg border bg-white px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none disabled:opacity-50 transition-colors ${
+              aiMode === 'change_notes'
+                ? 'border-emerald-300 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-500'
+                : 'border-slate-300 focus:border-slate-500 focus:ring-1 focus:ring-slate-400'
+            }`}
           />
 
           {isAiGenerating ? (
@@ -602,7 +612,7 @@ export const ChatPanel: React.FC = () => {
               type="button"
               onClick={stopAiGeneration}
               title="Stop AI Generation"
-              className="h-9 px-3 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-medium inline-flex items-center gap-1.5 shrink-0 cursor-pointer"
+              className="h-9 px-3 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-medium inline-flex items-center gap-1.5 shrink-0 cursor-pointer shadow-2xs"
             >
               <Square className="w-3.5 h-3.5 fill-current" />
               <span>Stop</span>
@@ -612,16 +622,16 @@ export const ChatPanel: React.FC = () => {
               type="submit"
               disabled={!inputPrompt.trim() || !activeSession}
               title="Send (Enter)"
-              className={`h-9 px-3.5 text-white rounded-lg text-xs font-medium inline-flex items-center gap-1.5 shrink-0 transition-colors cursor-pointer disabled:opacity-40 ${
+              className={`h-9 px-3.5 text-white rounded-lg text-xs font-medium inline-flex items-center gap-1.5 shrink-0 transition-colors cursor-pointer disabled:opacity-40 shadow-2xs ${
                 aiMode === 'change_notes'
-                  ? 'bg-emerald-700 hover:bg-emerald-800'
-                  : 'bg-blue-700 hover:bg-blue-800'
+                  ? 'bg-emerald-600 hover:bg-emerald-700'
+                  : 'bg-slate-900 hover:bg-slate-800'
               }`}
             >
               {aiMode === 'change_notes' ? (
                 <>
                   <Sparkles className="w-3.5 h-3.5" />
-                  <span>Update</span>
+                  <span>Update Notes</span>
                 </>
               ) : (
                 <>
@@ -633,10 +643,10 @@ export const ChatPanel: React.FC = () => {
           )}
         </div>
 
-        <div className="mt-1.5 flex items-center justify-between text-[10px] text-slate-400 px-0.5">
+        <div className="mt-1.5 flex items-center justify-between text-[10px] text-slate-400 px-0.5 select-none">
           <span>Enter to send · Shift+Enter for new line</span>
           <span className="font-mono tabular-nums">
-            {aiMode === 'ask' ? 'Mode A: Ask / Explain' : 'Mode B: Change Notes'}
+            {aiMode === 'ask' ? 'Mode: Ask & Explain' : 'Mode: Change Notes'}
           </span>
         </div>
       </form>

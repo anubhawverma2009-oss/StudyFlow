@@ -5,6 +5,7 @@ import {
   Bold,
   BookMarked,
   Check,
+  ChevronDown,
   Code,
   Copy,
   FileCode,
@@ -17,6 +18,7 @@ import {
   Loader2,
   Maximize2,
   Minimize2,
+  MoreHorizontal,
   PanelRightClose,
   Plus,
   Redo2,
@@ -63,8 +65,8 @@ export const NotesPanel: React.FC = () => {
   const activeSession = sessions[activeSessionId];
   const notes = activeSession?.notes;
 
-  const [activeAiSectionMenu, setActiveAiSectionMenu] = useState<string | null>(null);
-  const [activeAddBlockMenu, setActiveAddBlockMenu] = useState<string | null>(null);
+  const [isInsertMenuOpen, setIsInsertMenuOpen] = useState(false);
+  const [activeSectionMenuId, setActiveSectionMenuId] = useState<string | null>(null);
   const [newSectionTitle, setNewSectionTitle] = useState('');
   const [isAddingSection, setIsAddingSection] = useState(false);
   const [copiedSuccess, setCopiedSuccess] = useState(false);
@@ -131,7 +133,8 @@ export const NotesPanel: React.FC = () => {
     };
 
     addBlockToSectionManual(sectionId, newBlock);
-    setActiveAddBlockMenu(null);
+    setActiveSectionMenuId(null);
+    setIsInsertMenuOpen(false);
   };
 
   const handleUpdateBlock = (
@@ -302,13 +305,14 @@ export const NotesPanel: React.FC = () => {
       </div>
 
       {notes && notesViewMode === 'rich' && (
-        <div className="bg-slate-50 border-b border-slate-200 px-3 py-1.5 flex items-center justify-between gap-2 overflow-x-auto shrink-0">
+        <div className="bg-slate-50 border-b border-slate-200 px-3 py-1.5 flex items-center justify-between gap-2 shrink-0 select-none">
           <div className="flex items-center gap-1">
+            {/* Frequently Used Formatting Tools Visible */}
             <button
               type="button"
               onClick={() => wrapSelectionWithTag('**', '**')}
               title="Bold (**text**)"
-              className="p-1 rounded hover:bg-slate-200/70 text-slate-700"
+              className="p-1 rounded hover:bg-slate-200/70 text-slate-700 cursor-pointer"
             >
               <Bold className="w-3.5 h-3.5" />
             </button>
@@ -316,7 +320,7 @@ export const NotesPanel: React.FC = () => {
               type="button"
               onClick={() => wrapSelectionWithTag('*', '*')}
               title="Italic (*text*)"
-              className="p-1 rounded hover:bg-slate-200/70 text-slate-700"
+              className="p-1 rounded hover:bg-slate-200/70 text-slate-700 cursor-pointer"
             >
               <Italic className="w-3.5 h-3.5" />
             </button>
@@ -324,7 +328,7 @@ export const NotesPanel: React.FC = () => {
               type="button"
               onClick={() => wrapSelectionWithTag('<u>', '</u>')}
               title="Underline"
-              className="p-1 rounded hover:bg-slate-200/70 text-slate-700"
+              className="p-1 rounded hover:bg-slate-200/70 text-slate-700 cursor-pointer"
             >
               <Underline className="w-3.5 h-3.5" />
             </button>
@@ -332,70 +336,165 @@ export const NotesPanel: React.FC = () => {
               type="button"
               onClick={() => wrapSelectionWithTag('`', '`')}
               title="Inline Code"
-              className="p-1 rounded hover:bg-slate-200/70 text-slate-700"
+              className="p-1 rounded hover:bg-slate-200/70 text-slate-700 cursor-pointer"
             >
               <Code className="w-3.5 h-3.5" />
             </button>
 
             <div className="h-3.5 w-px bg-slate-300 mx-1" />
 
+            {/* Frequently used Undo / Redo */}
             <button
               type="button"
-              onClick={() => {
-                const targetSec = notes.sections[notes.sections.length - 1];
-                if (targetSec) handleInsertBlock(targetSec.id, 'definition');
-              }}
-              title="Insert Definition Box"
-              className="px-2 py-0.5 rounded hover:bg-slate-200/70 text-[11px] font-medium text-slate-700 inline-flex items-center gap-1 whitespace-nowrap"
+              onClick={undoNotes}
+              disabled={!canUndo}
+              title="Undo note edit (Ctrl+Z)"
+              className="p-1 rounded hover:bg-slate-200/70 text-slate-600 disabled:opacity-30 cursor-pointer"
             >
-              <BookMarked className="w-3 h-3 text-blue-600" />
-              <span>+ Definition</span>
+              <Undo2 className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={redoNotes}
+              disabled={!canRedo}
+              title="Redo note edit (Ctrl+Y)"
+              className="p-1 rounded hover:bg-slate-200/70 text-slate-600 disabled:opacity-30 cursor-pointer"
+            >
+              <Redo2 className="w-3.5 h-3.5" />
             </button>
 
-            <button
-              type="button"
-              onClick={() => {
-                const targetSec = notes.sections[notes.sections.length - 1];
-                if (targetSec) handleInsertBlock(targetSec.id, 'formula');
-              }}
-              title="Insert Formula Block"
-              className="px-2 py-0.5 rounded hover:bg-slate-200/70 text-[11px] font-medium text-slate-700 inline-flex items-center gap-1 whitespace-nowrap"
-            >
-              <Sigma className="w-3 h-3 text-indigo-600" />
-              <span>+ Formula</span>
-            </button>
+            <div className="h-3.5 w-px bg-slate-300 mx-1" />
 
-            <button
-              type="button"
-              onClick={() => {
-                const targetSec = notes.sections[notes.sections.length - 1];
-                if (targetSec) handleInsertBlock(targetSec.id, 'table');
-              }}
-              title="Insert Comparison Table"
-              className="px-2 py-0.5 rounded hover:bg-slate-200/70 text-[11px] font-medium text-slate-700 inline-flex items-center gap-1 whitespace-nowrap"
-            >
-              <Table className="w-3 h-3 text-emerald-600" />
-              <span>+ Table</span>
-            </button>
+            {/* Advanced Insert Actions under Clean "Insert ▾" Dropdown (Requirement 12) */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsInsertMenuOpen((v) => !v)}
+                className="px-2 py-0.5 rounded hover:bg-slate-200/80 text-[11px] font-medium text-slate-700 inline-flex items-center gap-1 cursor-pointer bg-white border border-slate-200"
+                title="Insert special blocks (Definition, Formula, Table, Exam Tip...)"
+              >
+                <Plus className="w-3 h-3 text-slate-500" />
+                <span>Insert</span>
+                <ChevronDown className="w-3 h-3 opacity-70" />
+              </button>
 
-            <button
-              type="button"
-              onClick={() => {
-                const targetSec = notes.sections[notes.sections.length - 1];
-                if (targetSec) handleInsertBlock(targetSec.id, 'exam_tip');
-              }}
-              title="Insert Exam Tip Callout"
-              className="px-2 py-0.5 rounded hover:bg-slate-200/70 text-[11px] font-medium text-slate-700 inline-flex items-center gap-1 whitespace-nowrap"
-            >
-              <Lightbulb className="w-3 h-3 text-amber-600" />
-              <span>+ Exam Tip</span>
-            </button>
+              {isInsertMenuOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-30"
+                    onClick={() => setIsInsertMenuOpen(false)}
+                  />
+                  <div className="absolute left-0 mt-1 w-48 bg-white border border-slate-200 rounded-lg shadow-lg py-1 z-40 text-xs text-slate-700 animate-in fade-in duration-75">
+                    <div className="px-3 py-1 text-[10px] uppercase tracking-wider text-slate-400 font-semibold">
+                      Insert Block
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsInsertMenuOpen(false);
+                        const targetSec = notes.sections[notes.sections.length - 1];
+                        if (targetSec) handleInsertBlock(targetSec.id, 'definition');
+                      }}
+                      className="w-full text-left px-3 py-1.5 hover:bg-slate-50 flex items-center gap-2 cursor-pointer"
+                    >
+                      <BookMarked className="w-3.5 h-3.5 text-blue-600" />
+                      <span>Definition Box</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsInsertMenuOpen(false);
+                        const targetSec = notes.sections[notes.sections.length - 1];
+                        if (targetSec) handleInsertBlock(targetSec.id, 'formula');
+                      }}
+                      className="w-full text-left px-3 py-1.5 hover:bg-slate-50 flex items-center gap-2 cursor-pointer"
+                    >
+                      <Sigma className="w-3.5 h-3.5 text-indigo-600" />
+                      <span>Formula / Equation</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsInsertMenuOpen(false);
+                        const targetSec = notes.sections[notes.sections.length - 1];
+                        if (targetSec) handleInsertBlock(targetSec.id, 'table');
+                      }}
+                      className="w-full text-left px-3 py-1.5 hover:bg-slate-50 flex items-center gap-2 cursor-pointer"
+                    >
+                      <Table className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Comparison Table</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsInsertMenuOpen(false);
+                        const targetSec = notes.sections[notes.sections.length - 1];
+                        if (targetSec) handleInsertBlock(targetSec.id, 'exam_tip');
+                      }}
+                      className="w-full text-left px-3 py-1.5 hover:bg-slate-50 flex items-center gap-2 cursor-pointer"
+                    >
+                      <Lightbulb className="w-3.5 h-3.5 text-amber-600" />
+                      <span>Exam Tip</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsInsertMenuOpen(false);
+                        const targetSec = notes.sections[notes.sections.length - 1];
+                        if (targetSec) handleInsertBlock(targetSec.id, 'example');
+                      }}
+                      className="w-full text-left px-3 py-1.5 hover:bg-slate-50 flex items-center gap-2 cursor-pointer"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-teal-600" />
+                      <span>Worked Example</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsInsertMenuOpen(false);
+                        const targetSec = notes.sections[notes.sections.length - 1];
+                        if (targetSec) handleInsertBlock(targetSec.id, 'code');
+                      }}
+                      className="w-full text-left px-3 py-1.5 hover:bg-slate-50 flex items-center gap-2 cursor-pointer"
+                    >
+                      <FileCode className="w-3.5 h-3.5 text-slate-700" />
+                      <span>Code Block</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsInsertMenuOpen(false);
+                        const targetSec = notes.sections[notes.sections.length - 1];
+                        if (targetSec) handleInsertBlock(targetSec.id, 'bullet_list');
+                      }}
+                      className="w-full text-left px-3 py-1.5 hover:bg-slate-50 flex items-center gap-2 cursor-pointer"
+                    >
+                      <List className="w-3.5 h-3.5 text-slate-500" />
+                      <span>Bullet List</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsInsertMenuOpen(false);
+                        const targetSec = notes.sections[notes.sections.length - 1];
+                        if (targetSec) handleInsertBlock(targetSec.id, 'numbered_list');
+                      }}
+                      className="w-full text-left px-3 py-1.5 hover:bg-slate-50 flex items-center gap-2 cursor-pointer"
+                    >
+                      <ListOrdered className="w-3.5 h-3.5 text-slate-500" />
+                      <span>Numbered List</span>
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
 
+          {/* + Section Action */}
           <button
             type="button"
             onClick={() => setIsAddingSection(true)}
-            className="px-2 py-0.5 bg-white hover:bg-slate-100 border border-slate-200 rounded text-[11px] font-medium text-slate-700 inline-flex items-center gap-1 whitespace-nowrap shrink-0"
+            className="px-2.5 py-0.5 bg-white hover:bg-slate-100 border border-slate-200 rounded text-[11px] font-medium text-slate-700 inline-flex items-center gap-1 whitespace-nowrap shrink-0 cursor-pointer shadow-2xs"
           >
             <Plus className="w-3 h-3" />
             <span>Section</span>
@@ -529,15 +628,15 @@ export const NotesPanel: React.FC = () => {
                       />
                     </div>
 
-                    <div className="flex items-center gap-1 shrink-0">
+                    <div className="flex items-center gap-1.5 shrink-0 select-none">
                       {section.pageRefs && section.pageRefs.length > 0 && (
-                        <div className="hidden sm:flex items-center gap-1 mr-1 text-[11px] font-mono tabular-nums text-slate-400">
+                        <div className="hidden sm:flex items-center gap-1 text-[11px] font-mono tabular-nums text-slate-400">
                           {section.pageRefs.slice(0, 3).map((pNum) => (
                             <button
                               key={pNum}
                               type="button"
                               onClick={() => setCurrentPage(pNum)}
-                              className="hover:text-blue-700 underline"
+                              className="hover:text-emerald-700 hover:underline"
                               title={`Jump to Page ${pNum} in PDF`}
                             >
                               p.{pNum}
@@ -546,231 +645,229 @@ export const NotesPanel: React.FC = () => {
                         </div>
                       )}
 
+                      {/* Single Contextual ⋯ Menu for Section (Requirement 13) */}
                       <div className="relative">
                         <button
                           type="button"
                           onClick={() =>
-                            setActiveAiSectionMenu(
-                              activeAiSectionMenu === section.id ? null : section.id
+                            setActiveSectionMenuId(
+                              activeSectionMenuId === section.id ? null : section.id
                             )
                           }
-                          disabled={isAiGenerating}
-                          title="Surgically modify only this section with AI"
-                          className="px-2 py-1 rounded text-[11px] font-medium text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/80 inline-flex items-center gap-1 whitespace-nowrap cursor-pointer disabled:opacity-40"
+                          className="p-1.5 rounded-md hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
+                          title="Section options: AI edit, Insert block, Move, Delete"
+                          aria-label="Section options"
                         >
-                          <Wand2 className="w-3 h-3" />
-                          <span>AI Edit</span>
+                          <MoreHorizontal className="w-4 h-4" />
                         </button>
 
-                        {activeAiSectionMenu === section.id && (
+                        {activeSectionMenuId === section.id && (
                           <>
                             <div
                               className="fixed inset-0 z-30"
-                              onClick={() => setActiveAiSectionMenu(null)}
+                              onClick={() => setActiveSectionMenuId(null)}
                             />
-                            <div className="absolute right-0 mt-1 w-56 bg-white border border-slate-200 rounded-lg shadow-lg py-1 z-40 text-xs text-slate-700">
-                              <div className="px-3 py-1 text-[10px] font-semibold text-slate-400 border-b border-slate-100">
-                                Modify ONLY "{section.heading}"
+                            <div className="absolute right-0 mt-1 w-56 bg-white border border-slate-200 rounded-lg shadow-lg py-1.5 z-40 text-xs text-slate-700 animate-in fade-in duration-75">
+                              <div className="px-3 py-1 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                                AI Section Refinement
                               </div>
                               <button
                                 type="button"
                                 onClick={() => {
-                                  setActiveAiSectionMenu(null);
+                                  setActiveSectionMenuId(null);
                                   sendMessage(
                                     `Change only the "${section.heading}" section to make it simpler and easier for a beginner to understand.`,
                                     {
                                       forceMode: 'change_notes',
-                                      targetSectionHeading: section.heading
+                                      targetSectionHeading: section.heading,
                                     }
                                   );
                                 }}
-                                className="w-full text-left px-3 py-1.5 hover:bg-slate-50"
+                                disabled={isAiGenerating}
+                                className="w-full text-left px-3 py-1.5 hover:bg-slate-50 flex items-center gap-2 cursor-pointer disabled:opacity-40"
                               >
-                                Simplify this section
+                                <Wand2 className="w-3.5 h-3.5 text-emerald-600" />
+                                <span>Simplify this section</span>
                               </button>
                               <button
                                 type="button"
                                 onClick={() => {
-                                  setActiveAiSectionMenu(null);
+                                  setActiveSectionMenuId(null);
                                   sendMessage(
                                     `Add a concrete worked example to the "${section.heading}" section based on Page ${
                                       activeSession?.currentPage || 1
                                     }.`,
                                     {
                                       forceMode: 'change_notes',
-                                      targetSectionHeading: section.heading
+                                      targetSectionHeading: section.heading,
                                     }
                                   );
                                 }}
-                                className="w-full text-left px-3 py-1.5 hover:bg-slate-50"
+                                disabled={isAiGenerating}
+                                className="w-full text-left px-3 py-1.5 hover:bg-slate-50 flex items-center gap-2 cursor-pointer disabled:opacity-40"
                               >
-                                Add worked example here
+                                <Sparkles className="w-3.5 h-3.5 text-teal-600" />
+                                <span>Add worked example</span>
                               </button>
                               <button
                                 type="button"
                                 onClick={() => {
-                                  setActiveAiSectionMenu(null);
+                                  setActiveSectionMenuId(null);
                                   sendMessage(
                                     `Make the "${section.heading}" section more concise and exam-oriented.`,
                                     {
                                       forceMode: 'change_notes',
-                                      targetSectionHeading: section.heading
+                                      targetSectionHeading: section.heading,
                                     }
                                   );
                                 }}
-                                className="w-full text-left px-3 py-1.5 hover:bg-slate-50"
+                                disabled={isAiGenerating}
+                                className="w-full text-left px-3 py-1.5 hover:bg-slate-50 flex items-center gap-2 cursor-pointer disabled:opacity-40"
                               >
-                                Make concise for exams
+                                <Check className="w-3.5 h-3.5 text-blue-600" />
+                                <span>Make concise for exams</span>
                               </button>
                               <button
                                 type="button"
                                 onClick={() => {
-                                  setActiveAiSectionMenu(null);
+                                  setActiveSectionMenuId(null);
                                   sendMessage(
                                     `Convert only the "${section.heading}" section into easy-to-understand Hinglish.`,
                                     {
                                       forceMode: 'change_notes',
-                                      targetSectionHeading: section.heading
+                                      targetSectionHeading: section.heading,
                                     }
                                   );
                                 }}
-                                className="w-full text-left px-3 py-1.5 hover:bg-slate-50"
+                                disabled={isAiGenerating}
+                                className="w-full text-left px-3 py-1.5 hover:bg-slate-50 flex items-center gap-2 cursor-pointer disabled:opacity-40"
                               >
-                                Convert section to Hinglish
+                                <BookMarked className="w-3.5 h-3.5 text-indigo-600" />
+                                <span>Convert to Hinglish</span>
                               </button>
-                            </div>
-                          </>
-                        )}
-                      </div>
 
-                      <div className="relative">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setActiveAddBlockMenu(
-                              activeAddBlockMenu === section.id ? null : section.id
-                            )
-                          }
-                          title="Add block to this section"
-                          className="p-1 rounded text-slate-500 hover:bg-slate-100 hover:text-slate-900"
-                        >
-                          <Plus className="w-3.5 h-3.5" />
-                        </button>
+                              <div className="my-1 border-t border-slate-100" />
 
-                        {activeAddBlockMenu === section.id && (
-                          <>
-                            <div
-                              className="fixed inset-0 z-30"
-                              onClick={() => setActiveAddBlockMenu(null)}
-                            />
-                            <div className="absolute right-0 mt-1 w-44 bg-white border border-slate-200 rounded-lg shadow-lg py-1 z-40 text-xs text-slate-700">
+                              <div className="px-3 py-1 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                                Insert Block Here
+                              </div>
                               <button
                                 type="button"
-                                onClick={() => handleInsertBlock(section.id, 'paragraph')}
-                                className="w-full text-left px-3 py-1.5 hover:bg-slate-50 flex items-center gap-2"
+                                onClick={() => {
+                                  setActiveSectionMenuId(null);
+                                  handleInsertBlock(section.id, 'paragraph');
+                                }}
+                                className="w-full text-left px-3 py-1.5 hover:bg-slate-50 flex items-center gap-2 cursor-pointer"
                               >
                                 <FileText className="w-3.5 h-3.5 text-slate-500" />
                                 <span>Paragraph</span>
                               </button>
                               <button
                                 type="button"
-                                onClick={() => handleInsertBlock(section.id, 'bullet_list')}
-                                className="w-full text-left px-3 py-1.5 hover:bg-slate-50 flex items-center gap-2"
+                                onClick={() => {
+                                  setActiveSectionMenuId(null);
+                                  handleInsertBlock(section.id, 'bullet_list');
+                                }}
+                                className="w-full text-left px-3 py-1.5 hover:bg-slate-50 flex items-center gap-2 cursor-pointer"
                               >
                                 <List className="w-3.5 h-3.5 text-slate-500" />
                                 <span>Bullet List</span>
                               </button>
                               <button
                                 type="button"
-                                onClick={() => handleInsertBlock(section.id, 'numbered_list')}
-                                className="w-full text-left px-3 py-1.5 hover:bg-slate-50 flex items-center gap-2"
-                              >
-                                <ListOrdered className="w-3.5 h-3.5 text-slate-500" />
-                                <span>Numbered List</span>
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleInsertBlock(section.id, 'definition')}
-                                className="w-full text-left px-3 py-1.5 hover:bg-slate-50 flex items-center gap-2"
+                                onClick={() => {
+                                  setActiveSectionMenuId(null);
+                                  handleInsertBlock(section.id, 'definition');
+                                }}
+                                className="w-full text-left px-3 py-1.5 hover:bg-slate-50 flex items-center gap-2 cursor-pointer"
                               >
                                 <BookMarked className="w-3.5 h-3.5 text-blue-600" />
-                                <span>Definition</span>
+                                <span>Definition Box</span>
                               </button>
                               <button
                                 type="button"
-                                onClick={() => handleInsertBlock(section.id, 'formula')}
-                                className="w-full text-left px-3 py-1.5 hover:bg-slate-50 flex items-center gap-2"
+                                onClick={() => {
+                                  setActiveSectionMenuId(null);
+                                  handleInsertBlock(section.id, 'formula');
+                                }}
+                                className="w-full text-left px-3 py-1.5 hover:bg-slate-50 flex items-center gap-2 cursor-pointer"
                               >
                                 <Sigma className="w-3.5 h-3.5 text-indigo-600" />
-                                <span>Formula / Equation</span>
+                                <span>Formula Block</span>
                               </button>
                               <button
                                 type="button"
-                                onClick={() => handleInsertBlock(section.id, 'example')}
-                                className="w-full text-left px-3 py-1.5 hover:bg-slate-50 flex items-center gap-2"
+                                onClick={() => {
+                                  setActiveSectionMenuId(null);
+                                  handleInsertBlock(section.id, 'table');
+                                }}
+                                className="w-full text-left px-3 py-1.5 hover:bg-slate-50 flex items-center gap-2 cursor-pointer"
                               >
-                                <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-                                <span>Worked Example</span>
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleInsertBlock(section.id, 'table')}
-                                className="w-full text-left px-3 py-1.5 hover:bg-slate-50 flex items-center gap-2"
-                              >
-                                <Table className="w-3.5 h-3.5 text-teal-600" />
+                                <Table className="w-3.5 h-3.5 text-emerald-600" />
                                 <span>Comparison Table</span>
                               </button>
                               <button
                                 type="button"
-                                onClick={() => handleInsertBlock(section.id, 'code')}
-                                className="w-full text-left px-3 py-1.5 hover:bg-slate-50 flex items-center gap-2"
-                              >
-                                <FileCode className="w-3.5 h-3.5 text-slate-700" />
-                                <span>Code Block</span>
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleInsertBlock(section.id, 'exam_tip')}
-                                className="w-full text-left px-3 py-1.5 hover:bg-slate-50 flex items-center gap-2"
+                                onClick={() => {
+                                  setActiveSectionMenuId(null);
+                                  handleInsertBlock(section.id, 'exam_tip');
+                                }}
+                                className="w-full text-left px-3 py-1.5 hover:bg-slate-50 flex items-center gap-2 cursor-pointer"
                               >
                                 <Lightbulb className="w-3.5 h-3.5 text-amber-600" />
                                 <span>Exam Tip</span>
                               </button>
+
+                              <div className="my-1 border-t border-slate-100" />
+
+                              <div className="px-3 py-1 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                                Reorder Section
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setActiveSectionMenuId(null);
+                                  moveSectionOrder(section.id, 'up');
+                                }}
+                                disabled={secIndex === 0}
+                                className="w-full text-left px-3 py-1.5 hover:bg-slate-50 flex items-center gap-2 cursor-pointer disabled:opacity-30"
+                              >
+                                <ArrowUp className="w-3.5 h-3.5 text-slate-500" />
+                                <span>Move Up</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setActiveSectionMenuId(null);
+                                  moveSectionOrder(section.id, 'down');
+                                }}
+                                disabled={secIndex === notes.sections.length - 1}
+                                className="w-full text-left px-3 py-1.5 hover:bg-slate-50 flex items-center gap-2 cursor-pointer disabled:opacity-30"
+                              >
+                                <ArrowDown className="w-3.5 h-3.5 text-slate-500" />
+                                <span>Move Down</span>
+                              </button>
+
+                              {notes.sections.length > 1 && (
+                                <>
+                                  <div className="my-1 border-t border-slate-100" />
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setActiveSectionMenuId(null);
+                                      deleteSectionManual(section.id);
+                                    }}
+                                    className="w-full text-left px-3 py-1.5 hover:bg-rose-50 text-rose-600 flex items-center gap-2 cursor-pointer font-medium"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                    <span>Delete Section</span>
+                                  </button>
+                                </>
+                              )}
                             </div>
                           </>
                         )}
                       </div>
-
-                      <button
-                        type="button"
-                        onClick={() => moveSectionOrder(section.id, 'up')}
-                        disabled={secIndex === 0}
-                        title="Move Section Up"
-                        className="p-1 rounded text-slate-400 hover:bg-slate-100 hover:text-slate-700 disabled:opacity-25"
-                      >
-                        <ArrowUp className="w-3.5 h-3.5" />
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => moveSectionOrder(section.id, 'down')}
-                        disabled={secIndex === notes.sections.length - 1}
-                        title="Move Section Down"
-                        className="p-1 rounded text-slate-400 hover:bg-slate-100 hover:text-slate-700 disabled:opacity-25"
-                      >
-                        <ArrowDown className="w-3.5 h-3.5" />
-                      </button>
-
-                      {notes.sections.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => deleteSectionManual(section.id)}
-                          title="Delete Section"
-                          className="p-1 rounded text-slate-400 hover:bg-red-50 hover:text-red-600"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      )}
                     </div>
                   </div>
 

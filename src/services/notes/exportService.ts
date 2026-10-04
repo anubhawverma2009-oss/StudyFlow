@@ -7,7 +7,7 @@ function sanitizeFileName(title: string): string {
     title
       .replace(/[^a-zA-Z0-9_-]+/g, '_')
       .replace(/^_+|_+$/g, '')
-      .slice(0, 60) || 'ScholarSync_Notes'
+      .slice(0, 60) || 'StudyFlow_Notes'
   );
 }
 
@@ -91,7 +91,7 @@ export function exportNotesAsDocx(notes: NotesDocument): void {
     </head>
     <body>
       <h1>${notes.title}</h1>
-      <p style="color:#64748B;font-size:9.5pt;">Generated in ScholarSync AI Workspace • Version ${notes.version}</p>
+      <p style="color:#64748B;font-size:9.5pt;">Generated in StudyFlow AI Workspace • Version ${notes.version}</p>
       ${sectionsHtml}
     </body>
     </html>
@@ -141,7 +141,7 @@ export function exportNotesAsPdf(notes: NotesDocument): void {
   pdf.setFontSize(9);
   pdf.setTextColor(100, 116, 139);
   pdf.text(
-    `ScholarSync Study Notes  •  Version ${notes.version}  •  Exported ${new Date().toLocaleDateString()}`,
+    `StudyFlow Notes  •  Version ${notes.version}  •  Exported ${new Date().toLocaleDateString()}`,
     margin,
     y
   );

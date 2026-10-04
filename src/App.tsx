@@ -1,15 +1,15 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   BookOpen,
+  Clock,
   FileText,
-  Maximize2,
   MessageSquare,
   Minimize2,
   PanelLeftOpen,
   PanelRightOpen,
-  Sparkles,
 } from 'lucide-react';
 import { Header } from './components/Header';
+import { HistorySidebar } from './components/HistorySidebar';
 import { WorkspaceModals } from './components/Modals';
 import { ChatPanel } from './features/chat/ChatPanel';
 import { NotesPanel } from './features/notes/NotesPanel';
@@ -31,11 +31,12 @@ export default function App() {
   const activeSessionId = useWorkspaceStore((s) => s.activeSessionId);
   const sessions = useWorkspaceStore((s) => s.sessions);
   const isAiGenerating = useWorkspaceStore((s) => s.isAiGenerating);
+  const historyList = useWorkspaceStore((s) => s.historyList);
 
   const activeSession = sessions[activeSessionId];
-  const notesCount = activeSession?.notes.sections.length || 0;
+  const notesCount = activeSession?.notes?.sections?.length || 0;
   const currentPage = activeSession?.currentPage || 1;
-  const totalPages = activeSession?.document.pageCount || 1;
+  const totalPages = activeSession?.document?.pageCount || 1;
 
   // Resizing state
   const isDraggingLeftRef = useRef(false);
@@ -123,7 +124,6 @@ export default function App() {
       if (isDraggingLeftRef.current) {
         // Adjust PDF width: clamped between 20% and 55%
         const clampedPdfWidth = Math.max(20, Math.min(55, Math.round(mousePercent)));
-        // Ensure center Chat has at least 25%
         const maxAllowedPdf = 100 - panelLayout.notesWidthPercent - 25;
         const finalPdf = Math.min(clampedPdfWidth, maxAllowedPdf);
         updatePanelLayout({ pdfWidthPercent: finalPdf });
@@ -131,7 +131,6 @@ export default function App() {
         // Adjust Notes width from right edge: clamped between 20% and 55%
         const notesWidth = 100 - mousePercent;
         const clampedNotesWidth = Math.max(20, Math.min(55, Math.round(notesWidth)));
-        // Ensure center Chat has at least 25%
         const maxAllowedNotes = 100 - panelLayout.pdfWidthPercent - 25;
         const finalNotes = Math.min(clampedNotesWidth, maxAllowedNotes);
         updatePanelLayout({ notesWidthPercent: finalNotes });
@@ -187,7 +186,7 @@ export default function App() {
           <div className="flex items-center gap-2">
             <BookOpen className="w-4 h-4 text-emerald-400" />
             <span className="font-semibold text-white">PDF Reader — Fullscreen Mode</span>
-            <span className="text-slate-400">({activeSession?.document.title})</span>
+            <span className="text-slate-400">({activeSession?.document?.title})</span>
           </div>
           <button
             onClick={() => setFullscreenPanel('none')}
@@ -211,7 +210,7 @@ export default function App() {
           <div className="flex items-center gap-2">
             <FileText className="w-4 h-4 text-emerald-600" />
             <span className="font-semibold text-slate-900">Notes Editor — Distraction-Free Fullscreen</span>
-            <span className="text-slate-500">({activeSession?.notes.title})</span>
+            <span className="text-slate-500">({activeSession?.notes?.title})</span>
           </div>
           <button
             onClick={() => setFullscreenPanel('none')}
@@ -238,10 +237,15 @@ export default function App() {
       {/* Top Header */}
       <Header />
 
-      {/* Main 3-Column Desktop Workspace / Responsive Workspace */}
+      {/* Main Desktop Workspace with Study History Sidebar + 3 Columns */}
       <div className="flex-1 flex overflow-hidden relative">
-        {/* DESKTOP LAYOUT (Hidden on mobile <1024px) */}
-        <div ref={containerRef} className="hidden lg:flex w-full h-full overflow-hidden">
+        {/* PERSISTENT STUDY HISTORY SIDEBAR (Desktop) */}
+        <div className="hidden lg:flex shrink-0">
+          <HistorySidebar />
+        </div>
+
+        {/* DESKTOP 3-PANEL WORKSPACE (Hidden on mobile <1024px) */}
+        <div ref={containerRef} className="hidden lg:flex flex-1 h-full overflow-hidden">
           {/* LEFT: PDF PANEL OR COLLAPSED RAIL */}
           {panelLayout.isPdfCollapsed ? (
             <div className="w-10 bg-slate-900 border-r border-slate-800 flex flex-col items-center py-4 justify-between shrink-0 transition-all">
@@ -330,6 +334,7 @@ export default function App() {
         {/* MOBILE / TABLET VIEW (<1024px Tabbed View) */}
         <div className="flex lg:hidden flex-col w-full h-full overflow-hidden">
           <div className="flex-1 overflow-hidden">
+            {mobileActiveTab === 'history' && <HistorySidebar />}
             {mobileActiveTab === 'pdf' && <PDFPanel />}
             {mobileActiveTab === 'chat' && <ChatPanel />}
             {mobileActiveTab === 'notes' && <NotesPanel />}
@@ -337,6 +342,25 @@ export default function App() {
 
           {/* Mobile Bottom Tab Navigation */}
           <nav className="h-14 bg-white border-t border-slate-200 flex items-center justify-around px-2 shrink-0 z-20">
+            <button
+              onClick={() => setMobileActiveTab('history')}
+              className={`flex flex-col items-center justify-center flex-1 py-1 text-xs font-medium transition ${
+                mobileActiveTab === 'history'
+                  ? 'text-emerald-700 font-semibold'
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <div className="relative">
+                <Clock className="w-5 h-5" />
+                {historyList.length > 0 && (
+                  <span className="absolute -top-1 -right-2 text-[9px] bg-slate-200 text-slate-700 rounded-full px-1">
+                    {historyList.length}
+                  </span>
+                )}
+              </div>
+              <span>History</span>
+            </button>
+
             <button
               onClick={() => setMobileActiveTab('pdf')}
               className={`flex flex-col items-center justify-center flex-1 py-1 text-xs font-medium transition ${

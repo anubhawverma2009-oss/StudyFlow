@@ -315,6 +315,7 @@ export function applyNoteModification(
             id: makeId('sec'),
             heading: newHeading,
             category: 'custom',
+            pageRefs: [1],
             blocks
           }
         ];

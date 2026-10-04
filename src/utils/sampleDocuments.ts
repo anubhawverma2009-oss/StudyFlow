@@ -463,7 +463,7 @@ export function generateSamplePdfBytes(docKey: SampleDocKey): Uint8Array {
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(8);
     pdf.setTextColor(148, 163, 184);
-    pdf.text('ScholarSync Academic Study Workspace • Grounded Document', margin, pageHeight - 22);
+    pdf.text('StudyFlow Academic Study Workspace • Grounded Document', margin, pageHeight - 22);
     pdf.text(`Page ${page.pageNumber}`, pageWidth - margin, pageHeight - 22, { align: 'right' });
   });
 

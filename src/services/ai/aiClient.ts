@@ -1,4 +1,5 @@
 import {
+  AIMode,
   AIResponseType,
   ChatMessage,
   DocumentMetadata,
@@ -239,6 +240,75 @@ class ClientAIService {
     }
 
     return response.json();
+  }
+
+  async sendMessage(params: {
+    prompt: string;
+    mode: AIMode;
+    quickAction?: QuickActionType;
+    document: DocumentMetadata;
+    currentPage: number;
+    selectedText?: string;
+    currentNotes: NotesDocument;
+    recentMessages: ChatMessage[];
+    targetSectionHeading?: string;
+    pageImageBase64?: string;
+    signal?: AbortSignal;
+  }): Promise<{
+    content: string;
+    type: AIResponseType;
+    citedPages: number[];
+    noteModification?: NoteModificationPayload;
+  }> {
+    if (params.mode === 'change_notes') {
+      if (params.quickAction === 'make_notes') {
+        const res = await this.generateNotes({
+          document: params.document,
+          currentPage: params.currentPage,
+          selectedText: params.selectedText,
+          customInstruction: params.prompt,
+          signal: params.signal,
+        });
+        return {
+          content: res.reply,
+          type: res.responseType,
+          citedPages: res.citedPages,
+          noteModification: res.modification,
+        };
+      } else {
+        const res = await this.modifyNotes({
+          document: params.document,
+          currentPage: params.currentPage,
+          selectedText: params.selectedText,
+          currentNotes: params.currentNotes,
+          instruction: params.prompt,
+          targetSectionHeading: params.targetSectionHeading,
+          signal: params.signal,
+        });
+        return {
+          content: res.reply,
+          type: res.responseType,
+          citedPages: res.citedPages,
+          noteModification: res.modification,
+        };
+      }
+    } else {
+      const res = await this.chat({
+        document: params.document,
+        currentPage: params.currentPage,
+        selectedText: params.selectedText,
+        userMessage: params.prompt,
+        recentMessages: params.recentMessages,
+        quickAction: params.quickAction,
+        pageImageBase64: params.pageImageBase64,
+        signal: params.signal,
+      });
+      return {
+        content: res.reply,
+        type: res.responseType,
+        citedPages: res.citedPages,
+      };
+    }
   }
 }
 

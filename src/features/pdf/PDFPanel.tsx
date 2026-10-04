@@ -254,41 +254,27 @@ export const PDFPanel: React.FC = () => {
       />
 
       {isDraggingOver && (
-        <div className="absolute inset-0 z-50 bg-blue-900/20 backdrop-blur-xs border-2 border-dashed border-blue-600 m-2 rounded-xl flex flex-col items-center justify-center p-6 text-center">
-          <div className="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center mb-3 shadow-md">
+        <div className="absolute inset-0 z-50 bg-emerald-950/20 backdrop-blur-2xs border-2 border-dashed border-emerald-600 m-2 rounded-xl flex flex-col items-center justify-center p-6 text-center">
+          <div className="w-12 h-12 rounded-full bg-emerald-600 text-white flex items-center justify-center mb-3 shadow-md">
             <FileUp className="w-6 h-6" />
           </div>
           <p className="text-sm font-semibold text-slate-900">Drop your PDF here to study</p>
           <p className="text-xs text-slate-600 mt-1">
-            ScholarSync will immediately render pages and index content for AI Q&amp;A and notes
+            StudyFlow will automatically save, render pages, and index content for AI notes
           </p>
         </div>
       )}
 
-      <div className="h-11 bg-white border-b border-slate-200 px-3 flex items-center justify-between gap-2 shrink-0">
+      {/* Simplified, Focused PDF Toolbar */}
+      <div className="h-11 bg-white border-b border-slate-200 px-3 flex items-center justify-between gap-2 shrink-0 select-none">
+        {/* Priority 1 & 2: Previous/Next Page & Page Indicator */}
         <div className="flex items-center gap-1">
-          <button
-            type="button"
-            onClick={() => setIsOutlineOpen((v) => !v)}
-            disabled={!activeSession}
-            title="Toggle Page & Chapter Index"
-            className={`p-1.5 rounded-md transition-colors ${
-              isOutlineOpen
-                ? 'bg-blue-50 text-blue-700'
-                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-            } disabled:opacity-40`}
-          >
-            <List className="w-4 h-4" />
-          </button>
-
-          <div className="h-4 w-px bg-slate-200 mx-0.5" />
-
           <button
             type="button"
             onClick={() => setCurrentPage(currentPage - 1)}
             disabled={!activeSession || currentPage <= 1}
             title="Previous Page"
-            className="p-1.5 rounded-md text-slate-600 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-35 transition-colors"
+            className="p-1.5 rounded-md text-slate-600 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-35 transition-colors cursor-pointer"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
@@ -314,7 +300,7 @@ export const PDFPanel: React.FC = () => {
               }}
               disabled={!activeSession}
               aria-label="Current page number"
-              className="w-8 text-center py-0.5 bg-slate-100 border border-slate-200 rounded text-xs font-mono tabular-nums focus:outline-none focus:border-blue-600"
+              className="w-8 text-center py-0.5 bg-slate-50 border border-slate-200 rounded text-xs font-mono tabular-nums focus:outline-none focus:border-emerald-600"
             />
             <span className="text-slate-400">/</span>
             <span>{pageCount}</span>
@@ -325,19 +311,20 @@ export const PDFPanel: React.FC = () => {
             onClick={() => setCurrentPage(currentPage + 1)}
             disabled={!activeSession || currentPage >= pageCount}
             title="Next Page"
-            className="p-1.5 rounded-md text-slate-600 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-35 transition-colors"
+            className="p-1.5 rounded-md text-slate-600 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-35 transition-colors cursor-pointer"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
 
+        {/* Priority 3 & 4: Zoom Controls (- / Fit / +) */}
         <div className="hidden sm:flex items-center gap-1">
           <button
             type="button"
             onClick={() => setZoomScale(zoomScale - 0.15)}
             disabled={!activeSession}
             title="Zoom Out"
-            className="p-1.5 rounded-md text-slate-600 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-40"
+            className="p-1.5 rounded-md text-slate-600 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-40 cursor-pointer"
           >
             <ZoomOut className="w-3.5 h-3.5" />
           </button>
@@ -347,7 +334,7 @@ export const PDFPanel: React.FC = () => {
             onClick={() => setZoomMode(zoomMode === 'fit-width' ? 'fit-page' : 'fit-width')}
             disabled={!activeSession}
             title="Toggle Fit Width / Fit Page"
-            className="px-2 py-1 rounded text-[11px] font-mono tabular-nums text-slate-700 hover:bg-slate-100 whitespace-nowrap"
+            className="px-2 py-1 rounded text-[11px] font-mono tabular-nums text-slate-700 hover:bg-slate-100 whitespace-nowrap cursor-pointer"
           >
             {zoomMode === 'fit-width'
               ? 'Fit Width'
@@ -361,49 +348,53 @@ export const PDFPanel: React.FC = () => {
             onClick={() => setZoomScale(zoomScale + 0.15)}
             disabled={!activeSession}
             title="Zoom In"
-            className="p-1.5 rounded-md text-slate-600 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-40"
+            className="p-1.5 rounded-md text-slate-600 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-40 cursor-pointer"
           >
             <ZoomIn className="w-3.5 h-3.5" />
           </button>
         </div>
 
+        {/* Priority 5, 6, 7: Text Selection, Search, Fullscreen (+ Outline) */}
         <div className="flex items-center gap-1">
+          {/* Text Selection Mode Toggle */}
           <button
             type="button"
             onClick={() => setShowSelectableTextLayer((v) => !v)}
             disabled={!activeSession}
-            title="Toggle Selectable Text View for Highlighting Passages"
-            className={`px-2 py-1 rounded text-[11px] font-medium transition-colors inline-flex items-center gap-1 whitespace-nowrap ${
+            title="Toggle Selectable Text Mode for selecting passages"
+            className={`px-2 py-1 rounded-md text-[11px] font-medium transition-colors inline-flex items-center gap-1 whitespace-nowrap cursor-pointer ${
               showSelectableTextLayer
-                ? 'bg-blue-600 text-white'
+                ? 'bg-emerald-600 text-white shadow-2xs'
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
             } disabled:opacity-40`}
           >
             <FileText className="w-3 h-3" />
-            <span>{showSelectableTextLayer ? 'Canvas View' : 'Select Text'}</span>
+            <span>{showSelectableTextLayer ? 'Canvas' : 'Select Text'}</span>
           </button>
 
+          {/* Search Button */}
           <button
             type="button"
             onClick={() => setIsSearchOpen((v) => !v)}
             disabled={!activeSession}
             title="Search inside PDF"
-            className={`p-1.5 rounded-md transition-colors ${
+            className={`p-1.5 rounded-md transition-colors cursor-pointer ${
               isSearchOpen
-                ? 'bg-blue-50 text-blue-700'
+                ? 'bg-emerald-50 text-emerald-700'
                 : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
             } disabled:opacity-40`}
           >
             <Search className="w-3.5 h-3.5" />
           </button>
 
+          {/* Fullscreen Button */}
           <button
             type="button"
             onClick={() =>
               setFullscreenPanel(fullscreenPanel === 'pdf' ? 'none' : 'pdf')
             }
             title={fullscreenPanel === 'pdf' ? 'Exit Fullscreen' : 'Fullscreen PDF'}
-            className="p-1.5 rounded-md text-slate-600 hover:bg-slate-100 hover:text-slate-900 hidden md:inline-flex"
+            className="p-1.5 rounded-md text-slate-600 hover:bg-slate-100 hover:text-slate-900 hidden md:inline-flex cursor-pointer"
           >
             {fullscreenPanel === 'pdf' ? (
               <Minimize2 className="w-3.5 h-3.5" />
@@ -412,12 +403,27 @@ export const PDFPanel: React.FC = () => {
             )}
           </button>
 
+          {/* Secondary Outline Drawer Toggle */}
+          <button
+            type="button"
+            onClick={() => setIsOutlineOpen((v) => !v)}
+            disabled={!activeSession}
+            title="Chapters / Page Index"
+            className={`p-1.5 rounded-md transition-colors cursor-pointer ${
+              isOutlineOpen
+                ? 'bg-emerald-50 text-emerald-700'
+                : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800'
+            } disabled:opacity-40`}
+          >
+            <List className="w-3.5 h-3.5" />
+          </button>
+
           {fullscreenPanel === 'none' && (
             <button
               type="button"
               onClick={() => updatePanelLayout({ isPdfCollapsed: true })}
               title="Collapse PDF Panel"
-              className="p-1.5 rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-900 hidden lg:inline-flex"
+              className="p-1.5 rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700 hidden lg:inline-flex cursor-pointer"
             >
               <PanelLeftClose className="w-3.5 h-3.5" />
             </button>

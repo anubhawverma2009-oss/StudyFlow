@@ -62,11 +62,16 @@ export interface NoteTableData {
 export interface NoteBlock {
   id: string;
   type: NoteBlockType;
-  title?: string;
   content: string;
+  title?: string;
   items?: string[];
-  tableData?: NoteTableData;
   pageRef?: number;
+  language?: string;
+  tableData?: NoteTableData;
+  calloutType?: 'info' | 'warning' | 'tip' | 'formula';
+  calloutTitle?: string;
+  exampleProblem?: string;
+  exampleSolution?: string;
 }
 
 export type NoteSectionCategory =
@@ -74,27 +79,30 @@ export type NoteSectionCategory =
   | 'concepts'
   | 'definitions'
   | 'formulas'
+  | 'key_takeaways'
   | 'examples'
   | 'important'
   | 'revision'
   | 'exam_qa'
+  | 'exam_prep'
+  | 'code_reference'
   | 'custom';
 
 export interface NoteSection {
   id: string;
   heading: string;
   category: NoteSectionCategory;
+  pageRefs: number[];
   blocks: NoteBlock[];
-  pageRefs?: number[];
 }
 
 export interface NotesDocument {
   documentId: string;
   title: string;
   subjectType: SubjectType;
-  sections: NoteSection[];
   version: number;
   updatedAt: string;
+  sections: NoteSection[];
 }
 
 export type NoteOperationType =
@@ -107,12 +115,17 @@ export type NoteOperationType =
 export interface NoteModificationPayload {
   operation: NoteOperationType;
   targetHeading?: string;
-  summaryOfChanges: string;
-  reason: string;
+  targetSectionHeading?: string;
+  summary?: string;
+  summaryOfChanges?: string;
+  reason?: string;
+  sections?: NoteSection[];
+  updatedSection?: NoteSection;
+  newSection?: NoteSection;
+  insertAfterHeading?: string;
+  blocksToAppend?: NoteBlock[];
   updatedTitle?: string;
   subjectType?: SubjectType;
-  sections?: NoteSection[];
-  blocksToAppend?: NoteBlock[];
 }
 
 export interface NoteVersion {
@@ -126,7 +139,7 @@ export interface NoteVersion {
 export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
-  mode: AIMode;
+  mode?: AIMode;
   responseType?: AIResponseType;
   content: string;
   timestamp: string;
@@ -171,3 +184,14 @@ export interface UserProfile {
 export type SaveStatus = 'saved' | 'saving' | 'unsaved' | 'error';
 
 export type ZoomMode = 'custom' | 'fit-width' | 'fit-page';
+
+export type MobileTab = 'history' | 'pdf' | 'chat' | 'notes';
+
+export interface PanelLayoutConfig {
+  pdfWidthPercent: number;
+  chatWidthPercent?: number;
+  notesWidthPercent: number;
+  isPdfCollapsed: boolean;
+  isChatCollapsed?: boolean;
+  isNotesCollapsed: boolean;
+}

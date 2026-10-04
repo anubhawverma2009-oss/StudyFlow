@@ -290,9 +290,9 @@ export const WorkspaceModals: React.FC = () => {
           <div className="bg-white border border-slate-200 rounded-xl max-w-md w-full p-5 shadow-xl">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2">
-                <User className="w-4 h-4 text-blue-700" />
+                <User className="w-4 h-4 text-emerald-700" />
                 <h2 className="font-display text-base font-semibold text-slate-900">
-                  Scholar Profile &amp; Session Sync
+                  Student Profile &amp; Workspace Sync
                 </h2>
               </div>
               <button
@@ -309,10 +309,10 @@ export const WorkspaceModals: React.FC = () => {
                 e.preventDefault();
                 updateUserProfile({
                   id: emailInput.trim()
-                    ? `scholar_${emailInput.trim().replace(/[^a-zA-Z0-9]/g, '_')}`
-                    : 'guest_scholar',
-                  name: nameInput.trim() || 'Guest Scholar',
-                  email: emailInput.trim() || 'guest@scholarsync.edu',
+                    ? `student_${emailInput.trim().replace(/[^a-zA-Z0-9]/g, '_')}`
+                    : 'guest_student',
+                  name: nameInput.trim() || 'Student Scholar',
+                  email: emailInput.trim() || 'student@studyflow.edu',
                   mode: emailInput.trim() ? 'authenticated' : 'guest',
                   institution: instInput.trim() || 'University Workspace'
                 });
